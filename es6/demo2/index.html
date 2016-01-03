@@ -1,0 +1,39 @@
+<html>
+
+<head>
+    <title>demo2</title>
+    <link rel="stylesheet" type="text/css" href="./statics/app.bundle.css">
+    <link rel="stylesheet" type="text/css" href="./vendor/cropperjs/dist/cropper.min.css">
+    <!-- 1. Load libraries -->
+    <script src="../vendor/traceur/traceur.js"></script>
+    <script src="../vendor/es6-shim/es6-shim.js"></script>
+    <script src="../vendor/systemjs/dist/system.src.js"></script>
+    <script src="./vendor/flow/dist/flow.min.js"></script>
+    <script src="./vendor/cropperjs/dist/cropper.min.js"></script>
+    <!--<script src="../node_modules/rxjs/bundles/Rx.js"></script> -->
+    <!-- 2. Configure SystemJS -->
+</head>
+<!-- 3. Display the application -->
+
+<body>
+    <div class="content">
+        <button id="browseButton">browseButton</button>
+        <button id="uploadButton">uploadButton</button>
+        <div id="dropTarget" class="dropTarget">drop area</div>
+    </div>
+    
+    <script>
+    System.config({
+        packages: {
+            app: {
+                format: 'register',
+                defaultExtension: 'js'
+            }
+        }
+    });
+    System.import('js/app.js')
+        .then(null, console.error.bind(console));
+    </script>
+</body>
+
+</html>
