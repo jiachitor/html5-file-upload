@@ -1,4 +1,6 @@
 var fs = require("fs"),
+    http = require('http'),
+    url = require('url'),
     gulp = require('gulp'),
     rename = require('gulp-rename'),
     browserSync = require('browser-sync'),
@@ -55,12 +57,60 @@ function bundle() {
         }));
 }
 
+// 代理方法
+function proxyTo(host, req, res) {
+    var toUrl = ('http://' + host + req.url)
+        .replace(/(\/image\/)/, '/');
+    console.log("[proxy url] " + toUrl);
+    console.log("------------------------------------");
+    var location = url.parse(toUrl);
+
+    var options = {
+        host: location.host,
+        hostname: location.hostname,
+        port: location.port,
+        method: req.method,
+        path: location.path,
+        headers: req.headers,
+        auth: location.auth
+    };
+    options.headers.host = location.host;
+
+    if (req.headers.referer) {
+        options.headers.referer = req.headers.referer.replace(/^(http:\/\/)?([^\/])+\//, "$1" + host + "/");
+    }
+
+    console.log("[proxy request]");
+    console.log(options);
+    console.log("------------------------------------");
+    var clientRequest = http.request(options, function (clientResponse) {
+        res.writeHead(clientResponse.statusCode, clientResponse.headers);
+        clientResponse.pipe(res, {end: false});
+        clientResponse.on("end", function () {
+            res.addTrailers(clientResponse.trailers);
+            res.end();
+        });
+    });
+    req.pipe(clientRequest);
+}
+
 // 建立服务器
 function browserSyncTask(callback) {
     // Serve files from the root of this project
     browserSync.init({
         server: {
-            baseDir: project
+            baseDir: project,
+            middleware: [
+                require('compression')(),
+                function (req, res, next) {
+                    var urlObj = url.parse(req.url);
+                    if (/^(\/)?\/upload\//i.test(urlObj.path)) {
+                        proxyTo('localhost:3000', req, res);
+                    } else {
+                        next();
+                    }
+                }
+            ]
         }
     });
     callback();
